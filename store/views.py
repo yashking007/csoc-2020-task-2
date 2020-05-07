@@ -13,8 +13,8 @@ def index(request):
 def bookDetailView(request, bid):
     template_name = 'store/book_detail.html'
     context = {
-        'book': None, # set this to an instance of the required book
-        'num_available': None, # set this to the number of copies of the book available, or 0 if the book isn't available
+        'book': get_object_or_404( Book, id__exact=bid ), # set this to an instance of the required book
+        'num_available': BookCopy.objects.filter(book__id__exact=bid, status__exact=True).count(), # set this to the number of copies of the book available, or 0 if the book isn't available
     }
     # START YOUR CODE HERE
     
@@ -25,11 +25,22 @@ def bookDetailView(request, bid):
 @csrf_exempt
 def bookListView(request):
     template_name = 'store/book_list.html'
+    get_data = request.GET
+    
+    try:
+        books = Book.objects.filter(
+            title__contains=get_data['title'],
+            author__contains=get_data['author'],
+            genre__contains=get_data['genre'],
+        )
+    except:
+        books = Book.objects.all()
+    
     context = {
-        'books': None, # set this to the list of required books upon filtering using the GET parameters
+        'books': books, # set this to the list of required books upon filtering using the GET parameters
                        # (i.e. the book search feature will also be implemented in this view)
     }
-    get_data = request.GET
+    
     # START YOUR CODE HERE
     
     
@@ -39,7 +50,7 @@ def bookListView(request):
 def viewLoanedBooks(request):
     template_name = 'store/loaned_books.html'
     context = {
-        'books': None,
+        'books': BookCopy.objects.filter(status__exact=False),
     }
     '''
     The above key 'books' in the context dictionary should contain a list of instances of the 
@@ -54,15 +65,25 @@ def viewLoanedBooks(request):
 @csrf_exempt
 @login_required
 def loanBookView(request):
+    post_data = request.POST
+    books = BookCopy.objects.filter( book__id__exact=post_data['bid'], status__exact=True )
+    
+    if len(books):
+        message = 'success'
+        books[0].status = False
+        books[0].save()
+    else :
+        message = 'failure'
+    
     response_data = {
-        'message': None,
+        'message': message,
     }
     '''
     Check if an instance of the asked book is available.
     If yes, then set the message to 'success', otherwise 'failure'
     '''
     # START YOUR CODE HERE
-    book_id = None # get the book id from post data
+    #book_id = None# get the book id from post data
 
 
     return JsonResponse(response_data)
@@ -77,6 +98,18 @@ to make this feature complete
 @csrf_exempt
 @login_required
 def returnBookView(request):
-    pass
+    post_data = request.POST
+    try:
+        bookCopy = BookCopy.objects.get( id__exact=post_data['bid'])
+        message = 'success'
+        bookCopy.status = True
+        bookCopy.save()
+    except:
+        message = 'failure'
+    
+    response_data = {
+        'message': message
+    }
+    return JsonResponse(response_data)
 
 

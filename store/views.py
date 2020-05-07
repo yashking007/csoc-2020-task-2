@@ -50,7 +50,7 @@ def bookListView(request):
 def viewLoanedBooks(request):
     template_name = 'store/loaned_books.html'
     context = {
-        'books': BookCopy.objects.filter(status__exact=False),
+        'books': BookCopy.objects.filter(status__exact=False, borrower = request.user),
     }
     '''
     The above key 'books' in the context dictionary should contain a list of instances of the 
@@ -71,6 +71,7 @@ def loanBookView(request):
     if len(books):
         message = 'success'
         books[0].status = False
+        books[0].borrower = request.user
         books[0].save()
     else :
         message = 'failure'
@@ -100,9 +101,10 @@ to make this feature complete
 def returnBookView(request):
     post_data = request.POST
     try:
-        bookCopy = BookCopy.objects.get( id__exact=post_data['bid'])
+        bookCopy = BookCopy.objects.get( id__exact=post_data['bid'], borrower=request.user )
         message = 'success'
         bookCopy.status = True
+        bookCopy.borrower = None
         bookCopy.save()
     except:
         message = 'failure'

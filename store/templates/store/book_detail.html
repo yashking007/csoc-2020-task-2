@@ -15,14 +15,32 @@
     <dt>Description:</dt>
     <dd>{{ book.description }}</dd>
     <dt>Rating:</dt>
-    <dd>{{ book.rating }}</dd>
+    <dd id="overall-rating">{{ book.rating }}</dd>
     <dt>MRP:</dt>
     <dd>Rs. {{ book.mrp }}</dd>
     <dt>Available Copies:</dt>
     <dd>{{ num_available }}</dd>
 </dl>
+<select id="rating">
+	<option value=0>0</option>
+	<option value=1>1</option>
+	<option value=2>2</option>
+	<option value=3>3</option>
+	<option value=4>4</option>
+	<option value=5>5</option>
+	<option value=6>6</option>
+	<option value=7>7</option>
+	<option value=8>8</option>
+	<option value=9>9</option>
+	<option value=10>10</option>
+</select>
+<button class="btn btn-primary" id="rate-button">
+	Rate
+</button>
+<br>
 <button class="btn btn-primary" id="loan-button">Loan {{ book.title }}</button>
 <script>
+
 $("#loan-button").click(function(){
     $.ajax({
 		url: "{% url 'loan-book' %}",
@@ -45,5 +63,31 @@ $("#loan-button").click(function(){
 
 	})
 })
+
+$("#rate-button").click(function(){
+	rating = $("#rating").value;
+	$.ajax({
+		url: "{% url 'rate-book' %}",
+		method: "POST",
+		data: {
+			bid: {{ book.id }},
+			rating: parseInt(rating),
+		},
+		success: function(data, status, xhr){
+			if(data['message'] == "success"){
+				alert("Book successfully rated");
+				$("#overall-rating").text(data["overall"]);
+			}
+			else{
+				alert("Unable to rate this book");
+			}
+		},
+		error: function(xhr, status, err){
+			alert("Some error occured");
+		}
+
+	})
+})
+
 </script>
 {% endblock %}

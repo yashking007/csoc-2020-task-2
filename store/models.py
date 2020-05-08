@@ -16,6 +16,23 @@ class Book(models.Model):
     def __str__(self):
         return f'{self.title} by {self.author}'
 
+class BookRating(models.model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    rating_choices = (
+        (0, '0'),
+        (1, '1'),
+        (2, '2'),
+        (3, '3'),
+        (4, '4'),
+        (5, '5'),
+        (6, '6'),
+        (7, '7'),
+        (8, '8'),
+        (9, '9'),
+        (10, '10'),
+    )
+    rating = models.IntegerField(choices=rating_choices)
 
 class BookCopy(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE)

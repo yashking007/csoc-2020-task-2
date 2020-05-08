@@ -114,4 +114,27 @@ def returnBookView(request):
     }
     return JsonResponse(response_data)
 
+@csrf_exempt
+@login_required
+def rateBookView(request):
+    post_data = request.POST
+    book = get_object_or_404(Book, pk=post_data['bid'])
+    response = {'message':'failure'}
+    if post_data['rating']>10 or post_data['rating']<0:
+        return JsonResponse(response)
+    try :
+        new_rating = BookRating.objects.get(user=request.user, book=book)
+        new_rating.rating = post_data['rating']
+    except:
+        new_rating = BookRating(user=request.user, book=book, rating=post_data['rating'])
+    new_rating.save()
 
+    book_ratings = BookRating.objects.filter(book=book)
+    sum=0
+    for book_rating in book_ratings:
+        sum += book_rating.rating
+    avg = sum/book_ratings.count()
+    book.rating = avg
+    book.save()
+    response = {'message':'success', 'overall':avg}
+    return JsonResponse(response)
